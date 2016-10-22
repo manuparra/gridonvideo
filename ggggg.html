@@ -1,0 +1,73 @@
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>Draw over Video</title>
+  <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+
+  	<style> 
+   		#canvas 
+   			{ position:absolute; width:480px; height:240px; }
+   		#videoContainer 
+   			{ position:absolute; width:480px; height:240px; z-index:1 }
+   		#svgContainer
+   			{ position:absolute; width:480px; height:200px; z-index:2000; }
+	</style>
+
+</head>
+
+<body>
+
+<div id="canvas">
+    <video id="videoContainer" controls="false">  <source src="http://clips.vorwaerts-gmbh.de/big_buck_bunny.ogv" type=video/ogg>  </video>
+    <canvas id="svgContainer" style="width: 480px; height: 240px;" height="240" width="480"></canvas>
+</div>
+
+
+<script language="javascript">
+	var el = document.getElementById('svgContainer');
+	var ctx = el.getContext('2d');
+
+	ctx.lineWidth = 3;
+	ctx.width=480;
+	ctx.height=240;
+	ctx.lineJoin = ctx.lineCap = 'round';
+
+	var isDrawing, points = [ ];
+
+	el.onmouseup = function(e) {
+	  
+	  points.push({ x: e.clientX, y: e.clientY });
+	  
+	  if (points.length == 4) {	
+	  	ctx.beginPath();  
+	  	ctx.moveTo(points[0].x-8, points[0].y-8);
+			
+		for (var i = 1; i < points.length; i++) {
+			ctx.lineTo(points[i].x-8, points[i].y-8);
+		}		
+	    ctx.strokeStyle = 'white';
+		ctx.lineTo(points[0].x-8, points[0].y-8);
+		ctx.stroke();
+
+
+		//Grid
+
+		h=2
+		v=2
+		var rows=[];
+		for (var i = 0; i < points.length; i++) {
+			if (rows.length==0) {rows.push({x:points[i].x,y:points[i].y});}
+			else
+			for (var j=0; j < 1; j++){
+				if ((rows[j].y - 20 < points[i].y) && (points[i].y <  rows[j].y + 20)){
+					rows.push({x:points[i].x,y:points[i].y});
+				}
+			}
+		}
+
+	  }
+	};
+  </script>
+</body>
+</html>
