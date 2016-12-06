@@ -22,31 +22,48 @@
 
 
 <div id="canvas">
-    <video id="videoContainer" controls="false">  <source src="http://clips.vorwaerts-gmbh.de/big_buck_bunny.ogv" type=video/ogg>  </video>
+    <video id="videoContainer" controls="true">  <source src="http://clips.vorwaerts-gmbh.de/big_buck_bunny.ogv" type=video/ogg>  </video>
     <canvas id="svgContainer" style="width: 480px; height: 240px;" height="240" width="480"></canvas>
 </div>
 
 <p style="position:absolute; margin-top:300px;">Click 4 points over video below, to create a trapezoidal grid.<BR>Reload the web to start again.</hp>
+<ul id="points_ppl" style="position:absolute; margin-top:350px;">
+	<li>
+		<p>X - Y</p>
+	</li>
 
+</ul>
 
 
 
 <script language="javascript">
+
+	/**********************************
+	  Los puntos se deben de iniciar:
+	 	- Point1: Down  - Left
+	 	- Point2: High  - Left
+ 		- Point3: Hight - Right
+ 		- Point4: Down  - Right
+	***********************************/	
+
+
 	var el = document.getElementById('svgContainer');
 	var ctx = el.getContext('2d');
 
-	ctx.lineWidth = 3;
+	ctx.lineWidth = 2;
 	ctx.width=480;
 	ctx.height=240;
 	ctx.lineJoin = ctx.lineCap = 'round';
 
 	var isDrawing, points = [ ];
+	var pointslines_v = [];
 
 	el.onmouseup = function(e) {
 	  
 	  points.push({ x: e.clientX, y: e.clientY });
 	  
-	  if (points.length == 4) {	
+	  if (points.length == 4) {
+
 	  	ctx.beginPath();  
 	  	ctx.moveTo(points[0].x-8, points[0].y-8);
 			
@@ -62,8 +79,13 @@
 
 		h=2
 		v=2
+
+		var numero_divisiones_verticales = 5;
+		var numero_divisiones_horizontales = 6;
+
 		var rows=[];
 		for (var i = 0; i < points.length; i++) {
+			$('#points_ppl').append($('<li>' + points[i].x + '  ' + points[i].y +  ' </li>'));
 			if (rows.length==0) {rows.push({x:points[i].x,y:points[i].y});}
 			else
 			for (var j=0; j < 1; j++){
@@ -72,6 +94,144 @@
 				}
 			}
 		}
+
+		//Create points for 5 vertical lines
+		$('#points_ppl').append($('<li><p>Puntos creados en Base mayor.</p></li>'));
+		
+		
+		var _x1 = points[0].x;
+		var _y1 = points[0].y;
+
+		var _x4 = points[3].x;
+		var _y4 = points[3].y;
+
+		var basePointsMayor =[];
+
+		var incremento_x = (_x4 - _x1)/numero_divisiones_verticales;
+		var incremento_y = (_y4 - _y1)/numero_divisiones_verticales;
+
+		for(var i=0; i<numero_divisiones_verticales-1; i++){
+			_x1 = _x1+incremento_x;
+			_y1 = _y1+incremento_y;
+
+			basePointsMayor.push({x:_x1, y:_y1});
+			$('#points_ppl').append($('<li>' + basePointsMayor[i].x + '  ' + basePointsMayor[i].y +  ' </li>'));
+		}
+
+		//Create points for 5 vertical lines
+		$('#points_ppl').append($('<li><p>Puntos creados en Base menor.</p></li>'));
+		
+		var _x2 = points[1].x;
+		var _y2 = points[1].y;
+
+		var _x3 = points[2].x;
+		var _y3 = points[2].y;
+
+		var basePointsMenor =[];
+
+		var incremento_x = (_x3 - _x2)/numero_divisiones_verticales;
+		var incremento_y = (_y3 - _y2)/numero_divisiones_verticales;
+
+		for(var i=0; i<numero_divisiones_verticales-1; i++){
+			_x2 = _x2+incremento_x;
+			_y2 = _y2+incremento_y;
+
+			basePointsMenor.push({x:_x2, y:_y2});
+			$('#points_ppl').append($('<li>' + basePointsMenor[i].x + '  ' + basePointsMenor[i].y +  ' </li>'));
+		}
+		
+
+		//Union de puntos Base-base
+		ctx.lineWidth = 1;
+		for (var i = 0; i < basePointsMenor.length; i++) {
+			ctx.beginPath();
+			ctx.moveTo(basePointsMenor[i].x-8, basePointsMenor[i].y-8);
+			ctx.lineTo(basePointsMayor[i].x-8, basePointsMayor[i].y-8);
+			ctx.stroke();
+		}
+
+
+		/*
+			Para las divisiones en horizontal es necesario
+			realizar el numero de divisiones en vertical, luego 
+			averiguar los puntos de corte de éstas lineas con las
+			diagonales, y luego unir los puntos de corte
+
+		*/
+
+		//Pinto diagonales
+
+		ctx.lineWidth = 1;
+		ctx.strokeStyle = 'red';
+
+		for (var i = 0; i < 2; i++) {
+			ctx.beginPath();
+			ctx.moveTo(points[i].x-8, points[i].y-8);
+			ctx.lineTo(points[i+2].x-8, points[i+2].y-8);
+			ctx.stroke();
+		}
+
+		//Nuevas divisiones horizontales (transparente al usuario)
+
+		//Create points for 5 vertical lines
+		$('#points_ppl').append($('<li><p>Puntos creados en Base mayor AUXILIAR.</p></li>'));
+		
+		
+		var _x1 = points[0].x;
+		var _y1 = points[0].y;
+
+		var _x4 = points[3].x;
+		var _y4 = points[3].y;
+
+		var basePointsMayor_aux =[];
+
+		var incremento_x = (_x4 - _x1)/numero_divisiones_horizontales;
+		var incremento_y = (_y4 - _y1)/numero_divisiones_horizontales;
+
+		for(var i=0; i<numero_divisiones_horizontales-1; i++){
+			_x1 = _x1+incremento_x;
+			_y1 = _y1+incremento_y;
+
+			basePointsMayor_aux.push({x:_x1, y:_y1});
+			$('#points_ppl').append($('<li>' + basePointsMayor_aux[i].x + '  ' + basePointsMayor_aux[i].y +  ' </li>'));
+		}
+
+		//Create points for 5 vertical lines
+		$('#points_ppl').append($('<li><p>Puntos creados en Base menor AUXILIAR.</p></li>'));
+		
+		var _x2 = points[1].x;
+		var _y2 = points[1].y;
+
+		var _x3 = points[2].x;
+		var _y3 = points[2].y;
+
+		var basePointsMenor_aux =[];
+
+		var incremento_x = (_x3 - _x2)/numero_divisiones_horizontales;
+		var incremento_y = (_y3 - _y2)/numero_divisiones_horizontales;
+
+		for(var i=0; i<numero_divisiones_horizontales-1; i++){
+			_x2 = _x2+incremento_x;
+			_y2 = _y2+incremento_y;
+
+			basePointsMenor_aux.push({x:_x2, y:_y2});
+			$('#points_ppl').append($('<li>' + basePointsMenor_aux[i].x + '  ' + basePointsMenor_aux[i].y +  ' </li>'));
+		}
+		
+
+		//Union de puntos Base-base AUXILIAR
+		ctx.lineWidth = 1;
+		for (var i = 0; i < basePointsMenor_aux.length; i++) {
+			ctx.beginPath();
+			ctx.moveTo(basePointsMenor_aux[i].x-8, basePointsMenor_aux[i].y-8);
+			ctx.lineTo(basePointsMayor_aux[i].x-8, basePointsMayor_aux[i].y-8);
+			ctx.stroke();
+		}
+
+		//Puntos de corte con diagonal
+		// ...
+		// ...
+		// ...
 
 	  }
 	};
