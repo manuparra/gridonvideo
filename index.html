@@ -80,8 +80,8 @@
 		h=2
 		v=2
 
-		var numero_divisiones_verticales = 5;
-		var numero_divisiones_horizontales = 11;
+		var numero_divisiones_verticales = 18;
+		var numero_divisiones_horizontales = 5;
 
 		var rows=[];
 		for (var i = 0; i < points.length; i++) {
@@ -98,7 +98,7 @@
 
 		/*
 			Dado que el trapecio no será perfecto (bases paralelas y laterales simétricos), el 
-			prioceso de división será algo mas complejo de lo previsto.
+			proceso de división será algo mas complejo de lo previsto.
 			Para crear las divisiones es necesario calcular el punto de fuga vertical y horizontal.
 			Punto Fuga Vertical:
 				- Calcular las rectas que pasan por las lineas laterales del trapecio.
@@ -107,40 +107,52 @@
 				- Calcular las rectas que pasan por ambas bases del trapecio.
 				- Calcular el punto de corte de las rectas anteriores.
 
-			1. Divisiones en las bases.
+			(1) Divisiones en las bases.
 				Una vez se tenga el punto de fuga, se crea un triángulo isósceles, donde el vértice del 
-				ángulo diferente será el Punto de Fuga Vertical (PFV). En el lado distinto se crearán 
+				ángulo diferente será el Punto de Fuga (PF). En el lado distinto se crearán 
 				el número de divisiones iguales que se quieran realizar. 
-				Seguidamente se crearán las rectas que pasen por el PFV y el punto i del lado distinto.
+				Seguidamente se crearán las rectas que pasen por el PF y el punto i del lado distinto.
 				A continuación se calculan los puntos de corte entre las rectas del PFV y las rectas de las bases.
-				Por último se pintan los segmentos A-B, siendo A el punto de corte entre la Recta del PFV y 
+				Por último se pintan los segmentos A-B, siendo A el punto de corte entre la Recta del PF y 
 				la base Menor y B el punto de corte con la base Mayor.
 
-			2. Divisiones en los laterales.
-				Se comprueba si la base menor y la mayor son paralelas.
-					a) Si son paralelas:
-						Se realiza transparentemente el mismo procedimiento que 1. pero con el número de 
-						divisiones horizontal en vez de vertical. 
-						Luego se calculan las rectas diagonales del trapecio.
-						A continuación se calculan los puntos de corte entre las rectas que pasan por el 
-						Punto de fuga nuevo y las diagonales. 
-						Seguidamente se calculan las rectas paralelas que pasan por los puntos de corte 
-						simétricos a la bisectriz del PFV.
+			(2) Divisiones en los laterales.
+				a) 	Se calcula la altura (h) desde la base mayor hasta el PF. 
+				b)	Se traza una recta paralela a R(*) que cruza por PF, y se determinan
+					dos puntos equidistantes a PF, con una distancia h, D1 y D2
+				c)	Se sigue el mismo proceso que (1) con el número de divisiones horizontales,
+					y se determinan los puntos de corte (pointscutmayor) SOLO en la base MAYOR.
+				d)	Desde D1 y D2, se trazan rectas que cortan los pointscutmayor
+				e)	Se determinan los puntos de corte en los laterales de las restas trazadas anteriormente.
 
-						Por ultimo se calculan los puntos de corte entre las rectas paralelas anteriores
-						y las rectas laterales del trapecio y se pintan de punto a punto.
+				f)	Por último se pintan las lineas que pasan por los puntos de corte correctamente.
 
-					b) Si no son paralelas se procede de misma forma que con la division en las bases. 
+
+			* La recta R será una recta que cruza por A y B, siendo A un punto intermedio 
+			  entre points[0] y point[1] y B un punto intermedio entre points[2] y points[3]
+
 		*/
 
 
+		/*********************************************************/
+		/*	DIVISIONES EN LAS BASES:
+		/*
+		/*	CÁLCULO DE DIVISIONES VERTICALES DEL CAMPO
+		/*********************************************************/
 
-			//Cálculo de PFV
+		//Cálculo de PFV
 
-		var pfv;
+		var pfv, d1, d2;
 
-		var rectas_laterales = [];
-		var rectas_bases = [];
+		var rectas_laterales = []; 	// Laterales del trapecio
+		var rectas_bases = [];		// Bases del trapecio
+		var rectas_pfv = [];		// rectas que pasan por Punto de Fuga
+		var fugasD = [];			// Puntos de fuga D1 y D2. Determinan las lineas horizontales
+		var cutbasemenor = [];		// Puntos de corte en la base menor
+		var cutbasemayor = [];		// Puntos de corte en la base Mayor
+		var cutlateralizda = [];	// Puntos de corte en el lado lateral izquierdo
+		var cutlateraldcha = [];	// Puntos de corte en el lado lateral derecho
+
 
 		var p1 = points[0];
 		var p2 = points[1];
@@ -168,34 +180,23 @@
 
 		pfv = {x: x_, y: y_};
 
-		$('#points_ppl').append($('<li><p>Punto de Fuga Vertical</p></li>'));
-		$('#points_ppl').append($('<li> X: ' + pfv.x + ', Y: ' + pfv.y +  ' </li>'));
-
-		/*
+		/***************************************************************************************
 			Calcular los puntos de la base del triangulo isosceles donde el angulo diferente se
 			encuentra donde el vértice el PFV.
 			Es decir, dos puntos P y S, donde 
 				1. |P-PFV| = |S-PFV|
 				2. P pertenece a rectas_laterales[0] 
 				3. S pertenece a rectas_laterales[1]
-		*/
+		****************************************************************************************/
 
 		//Se elige un punto al azar en una de las rectas de rectas_laterales.
 
 		var p1x=pfv.x-50;
 		var p2y=p1x*rectas_laterales[0].m + rectas_laterales[0].k;
-
 		var pfvP={x: p1x, y: p2y};
-
-		$('#points_ppl').append($('<li><p>Punto P de base triangulo isosceles</p></li>'));
-		$('#points_ppl').append($('<li> X: ' + pfvP.x + ', Y: ' + pfvP.y +  ' </li>'));
-
 		var pfv_p = Math.pow((pfv.x-pfvP.x)*(pfv.x-pfvP.x) + (pfv.y-pfvP.y)*(pfv.y-pfvP.y), 0.5);
-
-		$('#points_ppl').append($('<li><p>Punto de base triangulo isosceles MAGNITUD:</p></li>'));
-		$('#points_ppl').append($('<li> MAGNITUD P: ' + pfv_p + ' </li>'));
-
 		var a,b,c,m,k,t;
+		
 		m = rectas_laterales[1].m;
 		k = rectas_laterales[1].k;
 		t = pfv_p;
@@ -204,10 +205,8 @@
 		c = -2*pfv.y*k + k*k -t*t + pfv.x*pfv.x + pfv.y*pfv.y;
 
 		var aux = Math.pow(b*b - 4*a*c, 0.5);
-
 		var p2x = (-1*b + aux)/(2*a);
 		var p2x_ = (-1*b - aux)/(2*a);
-
 		var p2y, pfvS;
 
 		if(p2x > p2x_){
@@ -219,42 +218,29 @@
 			pfvS = {x: p2x_, y: p2y};
 		}
 
-		$('#points_ppl').append($('<li><p>Punto S de base triangulo isosceles</p></li>'));
-		$('#points_ppl').append($('<li> X: ' + pfvS.x + ' Y: ' + pfvS.y + ' </li>'));
-
 		var pfv_s = Math.pow((pfv.x-pfvS.x)*(pfv.x-pfvS.x) + (pfv.y-pfvS.y)*(pfv.y-pfvS.y), 0.5);
 
-		$('#points_ppl').append($('<li><p>Punto de base triangulo isosceles MAGNITUD:</p></li>'));
-		$('#points_ppl').append($('<li> MAGNITUD S: ' + pfv_s + ' </li>'));
-
-
-		/*
+		/*****************************************************************************************
 			Se calcula la recta que pasa por P y S (pfvP y pfvS respectivamente) y a continuación 
 			los n puntos que indican el numero de divisiones.
-		*/
+		*****************************************************************************************/
 
 		var cutpoints_vertical = [];
 		var p1 = pfvP;
 		var p2 = pfvS;
-
 		var incremento_x = (p2.x - p1.x)/numero_divisiones_verticales;
 		var incremento_y = (p2.y - p1.y)/numero_divisiones_verticales;
-
-		$('#points_ppl').append($('<li><p>Punto de base triangulo isosceles:</p></li>'));
 
 		for(var i=0; i<numero_divisiones_verticales-1; i++){
 			p1.x = p1.x+incremento_x;
 			p1.y = p1.y+incremento_y;
 
 			cutpoints_vertical.push({x:p1.x, y:p1.y});
-			$('#points_ppl').append($('<li> x: ' + cutpoints_vertical[i].x + ', y: '+ cutpoints_vertical[i].y +' </li>'));
+			//$('#points_ppl').append($('<li> x: ' + cutpoints_vertical[i].x + ', y: '+ cutpoints_vertical[i].y +' </li>'));
 		}
 
-
 		//Cálculo de las rectas que pasan por PFV y los puntos de corte cutpoints_vertical.
-		var rectas_pfv = [];
-		var cutbasemenor = [];
-		var cutbasemayor = [];
+		
 		p1 = pfv;
 
 		for(var i=0; i<numero_divisiones_verticales-1; i++){
@@ -276,23 +262,75 @@
 			cutbasemayor.push( {x: x_, y: y_} );
 		}
 
+		/*
 		$('#points_ppl').append($('<li><p>Puntos de corte en base mayor:</p></li>'));
 		for(var i=0; i<cutbasemayor.length; i++){
 			$('#points_ppl').append($('<li> x: ' + cutbasemayor[i].x + ', y: '+ cutbasemayor[i].y +' </li>'));	
 		}
-	
+		*/
+
 		//PINTAR LAS LINEAS DE DIVISION
 
-		ctx.beginPath();  
-	  		
-			
-		for (var i = 0; i < points.length; i++) {
-			ctx.moveTo(cutbasemayor[i].x-8, cutbasemayor[i].y-8);
-			ctx.lineTo(cutbasemenor[i].x-8, cutbasemenor[i].y-8);
-		}		
-	    ctx.strokeStyle = 'white';
+		ctx.beginPath();
+			for (var i = 0; i < cutbasemayor.length; i++) {
+				ctx.moveTo(cutbasemayor[i].x-8, cutbasemayor[i].y-8);
+				ctx.lineTo(cutbasemenor[i].x-8, cutbasemenor[i].y-8);
+			}		
+		    //ctx.strokeStyle = 'white';
 		ctx.stroke();
 
+		/*********************************************************/
+		/*	DIVISIONES EN LOS LATERALES:
+		/*
+		/*	CÁLCULO DE DIVISIONES HORIZONTALES DEL CAMPO
+		/*********************************************************/
+
+		//Calcular los puntos A y B (intermedios) y crear la recta que los cruza.
+
+		var a, b;
+
+		a = {x: (points[0].x+points[1].x)/2, y: (points[0].y+points[1].y)/2,};
+		b = {x: (points[2].x+points[3].x)/2, y: (points[2].y+points[3].y)/2,};
+
+		var recta_auxiliar;;
+		var recta_paralela;
+
+		recta_auxiliar = { m: (p2.y - p1.y)/(p2.x-p1.x), k: -1*(p1.x*((p2.y-p1.y)/(p2.x-p1.x)))+p1.y};
+		
+		recta_paralela = {m: recta_auxiliar.m , k: -1*(recta_auxiliar.m*pfv.x + pfv.y)};
+
+		$('#points_ppl').append($('<li><p> Recta auxiliar: y = ' + recta_auxiliar.m + 'x + ' + recta_auxiliar.k + '</p></li>'));
+		$('#points_ppl').append($('<li><p> Recta paralela: y = ' + recta_paralela.m + 'x + ' + recta_paralela.k + '</p></li>'));
+		$('#points_ppl').append($('<li><p> Punto de Fuga: X = ' + pfv.x + ', Y = ' + pfv.y + ' </p></li>'));
+
+		//Calcular la altura desde la base mayor a PF
+
+		var h = (rectas_bases[1].m*pfv.x - pfv.y + rectas_bases[1].k)/(Math.pow(rectas_bases[1].m*rectas_bases[1].m + 1 ,0.5));
+		$('#points_ppl').append($('<li><p> Altura de punto de fuga es:' + h + ' </p></li>'));
+
+		var a, b, c, m, k, t;
+
+		a = pfv.x;
+		b = pfv.y;
+		m = recta_paralela.m;
+		k = recta_paralela.k;
+
+		var a1 = 1 + m*m;
+		var b1 = -2*a + 2*m*k - 2*b*m;
+		var c1 = a*a + b*b + k*k - 2*b*k - h*h;
+
+		var x1 = (-1*b1 + Math.pow(b1*b1 - 4*a1*c1, 0,5))/(2*a1);
+		var x2 = (-1*b1 - Math.pow(b1*b1 - 4*a1*c1, 0,5))/(2*a1);
+
+		fugasD.push({x: x1, y: m*x1+k});
+		fugasD.push({x: x2, y: m*x2+k});
+
+		$('#points_ppl').append($('<li><p> Punto de fuga D1: x:' + fugasD[0].x + ' y:'+ fugasD[0].y +' </p></li>'));
+		$('#points_ppl').append($('<li><p> Punto de fuga D2: x:' + fugasD[1].x + ' y:'+ fugasD[1].y +' </p></li>'));
+
+		
+
+		
 	  }
 	};
   </script>
