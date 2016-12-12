@@ -1,6 +1,4 @@
-</body>
-</html>
-=======
+
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -53,7 +51,7 @@
 	var el = document.getElementById('svgContainer');
 	var ctx = el.getContext('2d');
 
-	ctx.lineWidth = 2;
+	ctx.lineWidth = 1;
 	ctx.width=480;
 	ctx.height=240;
 	ctx.lineJoin = ctx.lineCap = 'round';
@@ -63,9 +61,26 @@
 
 	el.onmouseup = function(e) {
 	  
+		
+
+
 	  points.push({ x: e.clientX, y: e.clientY });
 	  
 	  if (points.length == 4) {
+
+	  	
+	  	/*
+			Controlo que ambas bases sean paralelas
+	  	*/
+
+	  	var h1 = points[0].y + points[3].y;
+	  	points[0].y = h1/2;
+	  	points[3].y = h1/2;
+
+	  	h1 = points[1].y + points[2].y;
+	  	points[1].y = h1/2;
+	  	points[2].y = h1/2;
+
 
 	  	ctx.beginPath();  
 	  	ctx.moveTo(points[0].x-8, points[0].y-8);
@@ -83,8 +98,8 @@
 		h=2
 		v=2
 
-		var numero_divisiones_verticales = 18;
-		var numero_divisiones_horizontales = 5;
+		var numero_divisiones_verticales = 6;
+		var numero_divisiones_horizontales = 12;
 
 		var rows=[];
 		for (var i = 0; i < points.length; i++) {
@@ -120,29 +135,16 @@
 				la base Menor y B el punto de corte con la base Mayor.
 
 			(2) Divisiones en los laterales.
-				a) 	Se calcula la altura (h) desde la base mayor hasta el PF. 
-				b)	Se traza una recta paralela a R(*) que cruza por PF, y se determinan
-					dos puntos equidistantes a PF, con una distancia h, D1 y D2
-				c)	Se sigue el mismo proceso que (1) con el número de divisiones horizontales,
-					y se determinan los puntos de corte (pointscutmayor) SOLO en la base MAYOR.
-				d)	Desde D1 y D2, se trazan rectas que cortan los pointscutmayor
-				e)	Se determinan los puntos de corte en los laterales de las restas trazadas anteriormente.
-
-				f)	Por último se pintan las lineas que pasan por los puntos de corte correctamente.
-
-
-			* La recta R será una recta que cruza por A y B, siendo A un punto intermedio 
-			  entre points[0] y point[1] y B un punto intermedio entre points[2] y points[3]
+				1. Se trazan n rectas divisorias verticalmente -- n = numero de divisiones horizontales
+				2. Se trazan las diagonales
+				3. Se hayan los puntos de corte de las rectas divisorias con las diagonales
+				4. Se trazan rectas paralelas a las bases desde los puntos de corte.
+				5. Se hayan los puntos de corte de las retas paralelas con los laterales.
+				6. Se pintan las lineas correspondientes.
 
 		*/
 
-
-		/*********************************************************/
-		/*	DIVISIONES EN LAS BASES:
-		/*
-		/*	CÁLCULO DE DIVISIONES VERTICALES DEL CAMPO
-		/*********************************************************/
-
+		
 		//Cálculo de PFV
 
 		var pfv, d1, d2;
@@ -161,12 +163,12 @@
 		var p1 = points[0];
 		var p2 = points[1];
 
-		rectas_laterales.push({ m: (p2.y - p1.y)/(p2.x-p1.x), k: -1*(p1.x*((p2.y-p1.y)/(p2.x-p1.x)))+p1.y});
+		rectas_laterales.push({ m: (p2.y - p1.y)/(p2.x-p1.x), k: -1*(p1.x*((p2.y-p1.y)/(p2.x-p1.x)))+p1.y}); //Izquierdo
 
 		p1 = points[2];
 		p2 = points[3];
 
-		rectas_laterales.push({ m: (p2.y - p1.y)/(p2.x-p1.x), k: -1*(p1.x*((p2.y-p1.y)/(p2.x-p1.x)))+p1.y});
+		rectas_laterales.push({ m: (p2.y - p1.y)/(p2.x-p1.x), k: -1*(p1.x*((p2.y-p1.y)/(p2.x-p1.x)))+p1.y}); //Derecho
 
 		var p1 = points[1];
 		var p2 = points[2];
@@ -184,6 +186,15 @@
 
 		pfv = {x: x_, y: y_};
 
+
+
+
+		/**************************************************************************************************************/
+		/*											DIVISIONES EN LAS BASES::
+		/*
+		/*									CÁLCULO DE DIVISIONES VERTICALES DEL CAMPO
+		/**************************************************************************************************************/
+
 		/***************************************************************************************
 			Calcular los puntos de la base del triangulo isosceles donde el angulo diferente se
 			encuentra donde el vértice el PFV.
@@ -198,6 +209,7 @@
 		var p1x=pfv.x-50;
 		var p2y=p1x*rectas_laterales[0].m + rectas_laterales[0].k;
 		var pfvP={x: p1x, y: p2y};
+		var pfhP = {x: p1x, y: p2y};
 		var pfv_p = Math.pow((pfv.x-pfvP.x)*(pfv.x-pfvP.x) + (pfv.y-pfvP.y)*(pfv.y-pfvP.y), 0.5);
 		var a,b,c,m,k,t;
 		
@@ -211,15 +223,17 @@
 		var aux = Math.pow(b*b - 4*a*c, 0.5);
 		var p2x = (-1*b + aux)/(2*a);
 		var p2x_ = (-1*b - aux)/(2*a);
-		var p2y, pfvS;
+		var p2y, pfvS, pfhS;
 
 		if(p2x > p2x_){
 			p2y = m*p2x + k;
 			pfvS = {x: p2x, y: p2y};
+			pfhS = {x: p2x, y: p2y};
 		}
 		else{
 			p2y = m*p2x_ + k;
 			pfvS = {x: p2x_, y: p2y};
+			pfhS = {x: p2x, y: p2y};
 		}
 
 		var pfv_s = Math.pow((pfv.x-pfvS.x)*(pfv.x-pfvS.x) + (pfv.y-pfvS.y)*(pfv.y-pfvS.y), 0.5);
@@ -271,7 +285,7 @@
 		for(var i=0; i<cutbasemayor.length; i++){
 			$('#points_ppl').append($('<li> x: ' + cutbasemayor[i].x + ', y: '+ cutbasemayor[i].y +' </li>'));	
 		}
-		
+		*/
 
 		//PINTAR LAS LINEAS DE DIVISION
 
@@ -282,190 +296,173 @@
 			}		
 		    //ctx.strokeStyle = 'white';
 		ctx.stroke();
-*/
-		/*********************************************************/
-		/*	DIVISIONES EN LOS LATERALES:
+
+		/**************************************************************************************************************/
+		/*											DIVISIONES EN LOS LATERALES:
 		/*
-		/*	CÁLCULO DE DIVISIONES HORIZONTALES DEL CAMPO
-		/*********************************************************/
+		/*									CÁLCULO DE DIVISIONES HORIZONTALES DEL CAMPO
+		/**************************************************************************************************************/
 
-		//Calcular los puntos A y B (intermedios) y crear la recta que los cruza.
-
-		var a, b;
-
-		a = {x: (points[0].x+points[1].x)/2, y: (points[0].y+points[1].y)/2,};
-		b = {x: (points[2].x+points[3].x)/2, y: (points[2].y+points[3].y)/2,};
-
-		var recta_auxiliar;;
-		var recta_paralela;
-
-		recta_auxiliar = { m: (b.y - a.y)/(b.x-a.x), k: -1*(a.x*((b.y-a.y)/(b.x-a.x)))+a.y};
-		
-		recta_paralela = {m: recta_auxiliar.m , k: -1*(recta_auxiliar.m*pfv.x) + pfv.y};
-
-	
-		//Pintar recta paralela:
-		a = points[0].x;
-		b = recta_paralela.m*a+recta_paralela.k;
-
-		c = points[3].x;
-		d = recta_paralela.m*a+recta_paralela.k;
-
-		ctx.beginPath();
-		ctx.moveTo(a-8, b-8);
-		ctx.lineTo(c-8, d-8);	
-		    //ctx.strokeStyle = 'white';
-		ctx.stroke();
-
-
-		$('#points_ppl').append($('<li><p> Recta auxiliar: y = ' + recta_auxiliar.m + 'x + ' + recta_auxiliar.k + '</p></li>'));
-		$('#points_ppl').append($('<li><p> Recta paralela: y = ' + recta_paralela.m + 'x + ' + recta_paralela.k + '</p></li>'));
-		$('#points_ppl').append($('<li><p> Punto de Fuga: X = ' + pfv.x + ', Y = ' + pfv.y + ' </p></li>'));
-
-		//Calcular la altura desde la base mayor a PF
-
-		var h = (rectas_bases[1].m*pfv.x - pfv.y + rectas_bases[1].k)/(Math.pow(rectas_bases[1].m*rectas_bases[1].m + 1 ,0.5));
-		$('#points_ppl').append($('<li><p> Altura de punto de fuga es:' + h + ' </p></li>'));
-
-		
-		var m, p, k, t, a, b, c;
-
-		m = recta_paralela.m;
-		p = pfv.x;
-		t = pfv.y;
-		k = recta_paralela.k;
-
-		a = 1+m*m;
-		b = -2*p + 2*m*k - 2*t*m;
-		c = p*p + t*t + k*k - 2*t*k - h*h;
-
-		var solucion1 = (-1*b + Math.pow( (b*b - 4*a*c) , 0.5))/(2*a);
-		var solucion2 = (-1*b - Math.pow( (b*b - 4*a*c) , 0.5))/(2*a);
-
-		fugasD.push({x: solucion1, y: solucion1*m + k});
-		fugasD.push({x: solucion2, y: solucion2*m + k});
-
-		$('#points_ppl').append($('<li><p> Punto de fuga D1: x:' + fugasD[0].x + ' y:'+ fugasD[0].y +' </p></li>'));
-		$('#points_ppl').append($('<li><p> Punto de fuga D2: x:' + fugasD[1].x + ' y:'+ fugasD[1].y +' </p></li>'));
-
-		/*****************************************************************
-		// Crear las divisiones auxiliares en la base mayor. 
-		// El numero de divisiones es el número de divisiones horizontal
-		*****************************************************************/
-
-		/***************************************************************************************
-			Calcular los puntos de la base del triangulo isosceles donde el angulo diferente se
-			encuentra donde el vértice el PFV.
-			Es decir, dos puntos P y S, donde 
-				1. |P-PFV| = |S-PFV|
-				2. P pertenece a rectas_laterales[0] 
-				3. S pertenece a rectas_laterales[1]
-		****************************************************************************************/
-
-		//Se elige un punto al azar en una de las rectas de rectas_laterales.
-
-		var p1x=pfv.x-50;
-		var p2y=p1x*rectas_laterales[0].m + rectas_laterales[0].k;
-		var pfvP={x: p1x, y: p2y};
-		var pfv_p = Math.pow((pfv.x-pfvP.x)*(pfv.x-pfvP.x) + (pfv.y-pfvP.y)*(pfv.y-pfvP.y), 0.5);
-		var a,b,c,m,k,t;
-		
-		m = rectas_laterales[1].m;
-		k = rectas_laterales[1].k;
-		t = pfv_p;
-		a = 1+m*m;
-		b = -2*pfv.x + 2*m*k - 2*pfv.y*m;
-		c = -2*pfv.y*k + k*k -t*t + pfv.x*pfv.x + pfv.y*pfv.y;
-
-		var aux = Math.pow(b*b - 4*a*c, 0.5);
-		var p2x = (-1*b + aux)/(2*a);
-		var p2x_ = (-1*b - aux)/(2*a);
-		var p2y, pfvS;
-
-		if(p2x > p2x_){
-			p2y = m*p2x + k;
-			pfvS = {x: p2x, y: p2y};
-		}
-		else{
-			p2y = m*p2x_ + k;
-			pfvS = {x: p2x_, y: p2y};
-		}
-
-		var pfv_s = Math.pow((pfv.x-pfvS.x)*(pfv.x-pfvS.x) + (pfv.y-pfvS.y)*(pfv.y-pfvS.y), 0.5);
-
-		/*****************************************************************************************
-			Se calcula la recta que pasa por P y S (pfvP y pfvS respectivamente) y a continuación 
-			los n puntos que indican el numero de divisiones horizontales.
-		*****************************************************************************************/
+		// El punto de fuga es pfv;
 
 		var cutpoints_horizontal = [];
-		var t1 = pfvP;
-		var t2 = pfvS;
-		var tincremento_x = (t2.x - t1.x)/numero_divisiones_horizontales;
-		var tincremento_y = (t2.y - t1.y)/numero_divisiones_horizontales;
+		var q1 = pfhP;
+		var q2 = pfhS;
+		var qincremento_x = (q2.x - q1.x)/numero_divisiones_horizontales;
+		var qincremento_y = (q2.y - q1.y)/numero_divisiones_horizontales;
 
 		for(var i=0; i<numero_divisiones_horizontales-1; i++){
-			t1.x = t1.x + tincremento_x;
-			t1.y = t1.y + tincremento_y;
+			q1.x = q1.x+qincremento_x;
+			q1.y = q1.y+qincremento_y;
 
-			cutpoints_horizontal.push({x:t1.x, y:t1.y});
+			cutpoints_horizontal.push({x:q1.x, y:q1.y});
 			//$('#points_ppl').append($('<li> x: ' + cutpoints_horizontal[i].x + ', y: '+ cutpoints_horizontal[i].y +' </li>'));
 		}
 
 		//Cálculo de las rectas que pasan por PFV y los puntos de corte cutpoints_horizontal.
 		
-		t1 = pfv;
+		var cutbasemayorh = [];
+		var cutbasemenorh = [];
+		var rectas_pfh = [];
+		q1 = pfv;
 
 		for(var i=0; i<numero_divisiones_horizontales-1; i++){
-			t2 = cutpoints_horizontal[i];
-			rectas_pfh.push({ m: (t2.y - t1.y)/(t2.x-t1.x), k: -1*(t1.x*((t2.y-t1.y)/(t2.x-t1.x)))+t1.y});
+			q2 = cutpoints_horizontal[i];
+			rectas_pfh.push({ m: (q2.y - q1.y)/(q2.x-q1.x), k: -1*(q1.x*((q2.y-q1.y)/(q2.x-q1.x)))+q1.y});
 		}
 
-		//Puntos de corte de base menor y base mayor con rectas_pfv
-		var _x, _y;
-		var basemayorcut = [];
-
+		//Puntos de corte de base menor y base mayor con rectas_pfh
 
 		for(var i=0; i<rectas_pfh.length; i++){
+			x_ = ((rectas_pfh[i].k - rectas_bases[0].k)/(rectas_bases[0].m - rectas_pfh[i].m));
+			y_ = x_*rectas_pfh[i].m + rectas_pfh[i].k;
 
-			_x = ((rectas_pfh[i].k - rectas_bases[1].k)/(rectas_bases[1].m - rectas_pfh[i].m));
-			_y = _x*rectas_pfh[i].m + rectas_pfh[i].k;
+			cutbasemenorh.push( {x: x_, y: y_} );
 
-			basemayorcut.push( {x: _x, y: _y} );
+			x_ = ((rectas_pfh[i].k - rectas_bases[1].k)/(rectas_bases[1].m - rectas_pfh[i].m));
+			y_ = x_*rectas_pfh[i].m + rectas_pfh[i].k;
+
+			cutbasemayorh.push( {x: x_, y: y_} );
 		}
 
-		/*
-		$('#points_ppl').append($('<li> Punto de corte en la base mayor </li>'));
-		for(var i=0; i<basemayorcut.length; i++){
-			$('#points_ppl').append($('<li> x: ' + basemayorcut[i].x + ', y: '+ basemayorcut[i].y +' </li>'));
+		//PINTAR LAS LINEAS DE DIVISION
+		ctx.strokeStyle = 'red';
+		ctx.beginPath();
+			for (var i = 0; i < cutbasemayorh.length; i++) {
+				ctx.moveTo(cutbasemayorh[i].x-8, cutbasemayorh[i].y-8);
+				ctx.lineTo(cutbasemenorh[i].x-8, cutbasemenorh[i].y-8);
+			}		
+		    //ctx.strokeStyle = 'white';
+		ctx.stroke();
+
+
+		/*********************************
+			Crear las rectas diagonales:
+				points[0] -- points[2]
+				points[1] -- points[3]
+
+		*********************************/
+		var diagonales = [];
+		var d1 = points[0];
+		var d2 = points[2];
+
+		diagonales.push({ m: (d2.y - d1.y)/(d2.x-d1.x), k: -1*(d1.x*((d2.y-d1.y)/(d2.x-d1.x)))+d1.y}); 
+
+		d1 = points[1];
+		d2 = points[3];
+
+		diagonales.push({ m: (d2.y - d1.y)/(d2.x-d1.x), k: -1*(d1.x*((d2.y-d1.y)/(d2.x-d1.x)))+d1.y}); 
+
+		
+		//Puntos de corte de rectas_pfh con diagonales:
+
+		var cut_d1 = [];
+		var cut_d2 = [];
+		var x_, y_;
+
+		for(var i=0; i<rectas_pfh.length; i++){
+			x_ = ((rectas_pfh[i].k - diagonales[0].k)/(diagonales[0].m - rectas_pfh[i].m));
+			y_ = x_*rectas_pfh[i].m + rectas_pfh[i].k;
+
+			cut_d1.push( {x: x_, y: y_} );
+			//$('#points_ppl').append($('<li> x: ' + cut_d1[i].x + ', y: '+ cut_d1[i].y +' </li>'));
+
+			x_ = ((rectas_pfh[i].k - diagonales[1].k)/(diagonales[1].m - rectas_pfh[i].m));
+			y_ = x_*rectas_pfh[i].m + rectas_pfh[i].k;
+
+			cut_d2.push( {x: x_, y: y_} );
+			//$('#points_ppl').append($('<li> x: ' + cut_d2[i].x + ', y: '+ cut_d2[i].y +' </li>'));
 		}
-		*/		
+
+		cut_d1.reverse();
 
 		/*
-			Calcular las rectas que cruzan por los puntos de fuga (fugasD[0], fugasD[1]) 
-			y los puntos de corte de la base mayor
+		//PINTAR LAS LINEAS DE DIVISION horizontales auxiliares
+
+		ctx.beginPath();
+		//ctx.strokeStyle = 'white';
+			for (var i = 0; i < cut_d1.length; i++) {
+				ctx.moveTo(cut_d1[i].x-8, cut_d1[i].y-8);
+				ctx.lineTo(cut_d2[i].x-8, cut_d2[i].y-8);
+			}		
+		ctx.stroke();
 		*/
-		
-		ctx.beginPath();
-			for (var i = 0; i < basemayorcut.length; i++) {
-				ctx.moveTo(fugasD[0].x-8, fugasD[0].y-8);
-				ctx.lineTo(basemayorcut[i].x-8, basemayorcut[i].y-8);
-			}		
-		    //ctx.strokeStyle = 'white';
-		ctx.stroke();
 
-		ctx.beginPath();
-			for (var i = 0; i < basemayorcut.length; i++) {
-				ctx.moveTo(fugasD[1].x-8, fugasD[1].y-8);
-				ctx.lineTo(basemayorcut[i].x-8, basemayorcut[i].y-8);
-			}		
-		    //ctx.strokeStyle = 'white';
-		ctx.stroke();
-		
+		var rectas_horizontales = [];
+
+		//Crear las rectas que cruzan por cut_d1[i]-cut_d2[i]
+		var l1, l2 = cut_d1[i];
+		var l2 = cut_d2[i];
+
+
+		for(var i=0; i<cut_d1.length; i++){
+			l1 = cut_d1[i];
+			l2 = cut_d2[i];
+			rectas_horizontales.push({ m: (l2.y - l1.y)/(l2.x-l1.x), k: -1*(l1.x*((l2.y-l1.y)/(l2.x-l1.x)))+l1.y}); 
+			$('#points_ppl').append($('<li> x: ' + rectas_horizontales[i].m + ', y: '+ rectas_horizontales[i].k +' </li>'));
+		}
+
 
 		
-		var rectas_D1_cutpoints = [];
-		var rectas_D2_cutpoints = [];
+		/*
+			Crear rectas paralelas a las bases que pasan por los puntos de corte de una diagonal.
+
+		*/
+
+		var paralelas_bases = [];
+
+		for(var i=0; i<cut_d1.length; i++){
+			paralelas_bases.push({m: rectas_bases[0].m, k: rectas_bases[0].m*cut_d1[i].x + cut_d1[i].y});
+		}
+
+
+		//Determinar punto de corte de rectas_paralelas con los laterales
+
+		for(var i=0; i<paralelas_bases.length; i++){
+			x_ = ((paralelas_bases[i].k - rectas_laterales[0].k)/(rectas_laterales[0].m - paralelas_bases[i].m));
+			y_ = x_*paralelas_bases[i].m + paralelas_bases[i].k;
+
+			cutlateralizda.push( {x: x_, y: y_} );
+			//$('#points_ppl').append($('<li> x: ' + cut_d1[i].x + ', y: '+ cut_d1[i].y +' </li>'));
+
+			x_ = ((paralelas_bases[i].k - rectas_laterales[1].k)/(rectas_laterales[1].m - paralelas_bases[i].m));
+			y_ = x_*paralelas_bases[i].m + paralelas_bases[i].k;
+
+			cutlateraldcha.push( {x: x_, y: y_} );
+			//$('#points_ppl').append($('<li> x: ' + cut_d2[i].x + ', y: '+ cut_d2[i].y +' </li>'));
+		}
+
+
+		//PINTAR LAS LINEAS DE DIVISION horizontales auxiliares
+
+		ctx.beginPath();
+		//ctx.strokeStyle = 'white';
+			for (var i = 0; i < cutlateraldcha.length; i++) {
+				ctx.moveTo(cutlateralizda[i].x-8, cutlateralizda[i].y-8);
+				ctx.lineTo(cutlateraldcha[i].x-8, cutlateraldcha[i].y-8);
+			}		
+		ctx.stroke();
+		
 
 
 	  }
