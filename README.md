@@ -19,7 +19,8 @@ The gridovideo function needs 4 points to draw the grid, the order is `left-down
 
 After finishing the selection of the 4 corners, the following grid will appear on the video:
 
-![gridonvideo](./images/gridonvideo.jpg)
+![gridonvideo](./images/gridonvideo.png)
 
+## How to configure
 
 

@@ -27,7 +27,11 @@
     <canvas id="svgContainer" style="width: 480px; height: 240px;" height="240" width="480"></canvas>
 </div>
 
-<p style="position:absolute; margin-top:300px;">Click 4 points over video below, to create a trapezoidal grid.<BR>Reload the web to start again.</hp>
+<p style="position:absolute; margin-top:300px;">The gridovideo function needs 4 points to draw the grid, the order is `left-down` ->` left-up` -> `right-up` ->` right-down`</p>
+
+<p>
+Debug: 
+</p>
 <ul id="points_ppl" style="position:absolute; margin-top:350px;">
 	<li>
 		<p>X - Y</p>
@@ -40,7 +44,7 @@
 <script language="javascript">
 
 	/**********************************
-	  Los puntos se deben de iniciar:
+	  The gridovideo function needs 4 points to draw the grid, the order is `left-down` ->` left-up` -> `right-up` ->` right-down`, like the following scheme:
 	 	- Point1: Down  - Left
 	 	- Point2: High  - Left
  		- Point3: Hight - Right
@@ -60,18 +64,12 @@
 	var pointslines_v = [];
 
 	el.onmouseup = function(e) {
+		points.push({ x: e.clientX, y: e.clientY });
 	  
-		
-
-
-	  points.push({ x: e.clientX, y: e.clientY });
-	  
-	  if (points.length == 4) {
-
-	  	
-	  	/*
+	  	if (points.length == 4) {
+			/*
 			Controlo que ambas bases sean paralelas
-	  	*/
+	  		*/
 
 	  	var h1 = points[0].y + points[3].y;
 	  	points[0].y = h1/2;
