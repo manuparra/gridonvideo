@@ -8,12 +8,18 @@ This small utility has been created as an additional functionality for a real-ti
 This is a visual aid for detecting play in volleyball (or virtually for another sport or any video type supported by HTML5).
 
 
-Use:
+## Use
 
 The gridovideo function needs 4 points to draw the grid, the order is `left-down` ->` left-up` -> `right-up` ->` right-down`, like the following scheme:
 
 ![OrderGame](./images/gamecourtorder.jpg)
 
+
+## Results
+
+After finishing the selection of the 4 corners, the following grid will appear on the video:
+
+![gridonvideo](./images/gridonvideo.jpg)
 
 
 
